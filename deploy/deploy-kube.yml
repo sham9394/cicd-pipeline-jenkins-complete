@@ -30,14 +30,14 @@
     - name: Deploy new application configurations (canary)
       shell: |
         echo "Creating new canary deployment"
-        kubectl apply -f ${WORKSPCAE}train-schedule-kube-canary.yml
+        kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-kube-canary.yml
       args:
         warn: false
 
     - name: Deploy new application configurations (main)
       shell: |
         echo "Creating new main deployment"
-        kubectl apply -f ${WORKSPCAE}train-schedule-kube.yml
+        kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-kube.yml
       args:
         warn: false
 
@@ -48,7 +48,7 @@
         else
           echo "Creating application service"
           # Uncomment the following line if you want to create the service
-          # kubectl apply -f train-schedule-service-canary.yml
+          # kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-service-canary.yml
         fi
       args:
         warn: false
