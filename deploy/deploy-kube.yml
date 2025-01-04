@@ -1,26 +1,23 @@
----
 - hosts: "{{ env }}"
   # Uncomment `become: yes` if root privileges are required
   # become: yes
   tasks:
     - name: Check and delete the existing canary deployment
       shell: |
-        if kubectl get deployment train-schedule-deployment-canary &>/dev/null; then
-          echo "Deleting previous canary deployment"
-          kubectl delete deployment train-schedule-deployment-canary
-        else
-          echo "No previous canary deployment found"
-        fi
+        kubectl get deployment train-schedule-deployment-canary &>/dev/null && \
+        echo "Deleting previous canary deployment" && \
+        kubectl delete deployment train-schedule-deployment-canary || \
+        echo "No previous canary deployment found"
       args:
         warn: false
         executable: /bin/bash
 
     - name: Check and delete the existing main deployment
       shell: |
-        if kubectl get deployment | awk '{print $1}' | grep -q "train-schedule-deployment"; then
-          echo "Deleting previous main deployment"
-          kubectl delete deployment train-schedule-deployment
-        fi
+        kubectl get deployment train-schedule-deployment &>/dev/null && \
+        echo "Deleting previous main deployment" && \
+        kubectl delete deployment train-schedule-deployment || \
+        echo "No previous main deployment found"
       args:
         warn: false
 
@@ -39,7 +36,7 @@
             ports:
               - protocol: TCP
                 port: 8080
-                nodePort: 30001  # Update to a valid port range
+                nodePort: 30001
         dest: /tmp/train-schedule-service-canary.yml
 
     - name: Apply canary service
@@ -55,7 +52,7 @@
             labels:
               app: train-schedule
           spec:
-            replicas: 2  # Replace this with the actual value of CANARY_REPLICAS if needed
+            replicas: 2
             selector:
               matchLabels:
                 app: train-schedule
@@ -68,7 +65,7 @@
               spec:
                 containers:
                   - name: train-schedule
-                    image: sham9394/train-schedule:latest
+                    image: sham9394/train-schedule:{{ image_tag }}
                     ports:
                       - containerPort: 8080
                     livenessProbe:
@@ -129,7 +126,7 @@
               spec:
                 containers:
                   - name: train-schedule
-                    image: sham9394/train-schedule:latest
+                    image: sham9394/train-schedule:{{ image_tag }}
                     ports:
                       - containerPort: 8080
                     livenessProbe:
@@ -149,11 +146,8 @@
 
     - name: Check if canary service exists and apply
       shell: |
-        if kubectl get svc | awk '{print $1}' | grep -q "train-schedule-service-canary"; then
-          echo "Canary service exists, no action taken"
-        else
-          echo "Creating canary service"
-          kubectl apply -f train-schedule-service-canary.yml
-        fi
+        kubectl get svc train-schedule-service-canary &>/dev/null && \
+        echo "Canary service exists, no action taken" || \
+        (echo "Creating canary service" && kubectl apply -f /tmp/train-schedule-service-canary.yml)
       args:
         warn: false
