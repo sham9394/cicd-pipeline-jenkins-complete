@@ -26,7 +26,7 @@ tasks:
   - name: Deploy new application configurations (Canary)
     shell: |
       echo "Creating new canary deployment and service"
-      kubectl apply -f - <<'EOF'
+      kubectl apply -f - <<EOF
 kind: Service
 apiVersion: v1
 metadata:
@@ -42,7 +42,7 @@ spec:
       nodePort: 30001  # Update to a valid port range
 EOF
 
-      kubectl apply -f - <<'EOF'
+      kubectl apply -f - <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -81,7 +81,7 @@ EOF
   - name: Deploy new application configurations (Stable)
     shell: |
       echo "Creating new stable deployment and service"
-      kubectl apply -f - <<'EOF'
+      kubectl apply -f - <<EOF
 kind: Service
 apiVersion: v1
 metadata:
@@ -96,7 +96,7 @@ spec:
       nodePort: 8080
 EOF
 
-      kubectl apply -f - <<'EOF'
+      kubectl apply -f - <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -144,4 +144,3 @@ EOF
       fi
     args:
       warn: false
-
