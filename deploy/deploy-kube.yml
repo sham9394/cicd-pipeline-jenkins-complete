@@ -1,3 +1,5 @@
+# Ensure correct indentation and no stray characters
+
 hosts: "{{ env }}"
 # Uncomment `become: yes` if root privileges are required
 # become: yes
