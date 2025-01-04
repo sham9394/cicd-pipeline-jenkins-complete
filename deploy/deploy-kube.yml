@@ -23,116 +23,128 @@ tasks:
     args:
       warn: false
 
-  - name: Deploy new application configurations (Canary)
-    shell: |
-      echo "Creating new canary deployment and service"
-      kubectl apply -f - <<EOF
-kind: Service
-apiVersion: v1
-metadata:
-  name: train-schedule-service-canary
-spec:
-  type: NodePort
-  selector:
-    app: train-schedule
-    track: canary
-  ports:
-    - protocol: TCP
-      port: 8080
-      nodePort: 30001  # Update to a valid port range
-EOF
-
-      kubectl apply -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: train-schedule-deployment-canary
-  labels:
-    app: train-schedule
-spec:
-  replicas: 2  # Replace this with the actual value of CANARY_REPLICAS if needed
-  selector:
-    matchLabels:
-      app: train-schedule
-      track: canary
-  template:
-    metadata:
-      labels:
-        app: train-schedule
-        track: canary
-    spec:
-      containers:
-        - name: train-schedule
-          image: \$DOCKER_IMAGE_NAME:\$BUILD_NUMBER
+  - name: Create and deploy canary YAML file
+    copy:
+      content: |
+        kind: Service
+        apiVersion: v1
+        metadata:
+          name: train-schedule-service-canary
+        spec:
+          type: NodePort
+          selector:
+            app: train-schedule
+            track: canary
           ports:
-            - containerPort: 8080
-          livenessProbe:
-            httpGet:
-              path: /
+            - protocol: TCP
               port: 8080
-            initialDelaySeconds: 15
-            timeoutSeconds: 1
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 200m
-EOF
+              nodePort: 30001  # Update to a valid port range
+      dest: /tmp/train-schedule-service-canary.yml
 
-  - name: Deploy new application configurations (Stable)
-    shell: |
-      echo "Creating new stable deployment and service"
-      kubectl apply -f - <<EOF
-kind: Service
-apiVersion: v1
-metadata:
-  name: train-schedule-service
-spec:
-  type: NodePort
-  selector:
-    app: train-schedule
-  ports:
-    - protocol: TCP
-      port: 8080
-      nodePort: 8080
-EOF
+  - name: Apply canary service
+    shell: kubectl apply -f /tmp/train-schedule-service-canary.yml
 
-      kubectl apply -f - <<EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: train-schedule-deployment
-  labels:
-    app: train-schedule
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: train-schedule
-      track: stable
-  template:
-    metadata:
-      labels:
-        app: train-schedule
-        track: stable
-    spec:
-      containers:
-        - name: train-schedule
-          image: \$DOCKER_IMAGE_NAME:\$BUILD_NUMBER
+  - name: Create and deploy canary deployment YAML file
+    copy:
+      content: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: train-schedule-deployment-canary
+          labels:
+            app: train-schedule
+        spec:
+          replicas: 2  # Replace this with the actual value of CANARY_REPLICAS if needed
+          selector:
+            matchLabels:
+              app: train-schedule
+              track: canary
+          template:
+            metadata:
+              labels:
+                app: train-schedule
+                track: canary
+            spec:
+              containers:
+                - name: train-schedule
+                  image: \$DOCKER_IMAGE_NAME:\$BUILD_NUMBER
+                  ports:
+                    - containerPort: 8080
+                  livenessProbe:
+                    httpGet:
+                      path: /
+                      port: 8080
+                    initialDelaySeconds: 15
+                    timeoutSeconds: 1
+                    periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 200m
+      dest: /tmp/train-schedule-deployment-canary.yml
+
+  - name: Apply canary deployment
+    shell: kubectl apply -f /tmp/train-schedule-deployment-canary.yml
+
+  - name: Create and deploy stable YAML file
+    copy:
+      content: |
+        kind: Service
+        apiVersion: v1
+        metadata:
+          name: train-schedule-service
+        spec:
+          type: NodePort
+          selector:
+            app: train-schedule
           ports:
-            - containerPort: 8080
-          livenessProbe:
-            httpGet:
-              path: /
+            - protocol: TCP
               port: 8080
-            initialDelaySeconds: 15
-            timeoutSeconds: 1
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 200m
-EOF
-    args:
-      warn: false
+              nodePort: 8080
+      dest: /tmp/train-schedule-service.yml
+
+  - name: Apply stable service
+    shell: kubectl apply -f /tmp/train-schedule-service.yml
+
+  - name: Create and deploy stable deployment YAML file
+    copy:
+      content: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: train-schedule-deployment
+          labels:
+            app: train-schedule
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: train-schedule
+              track: stable
+          template:
+            metadata:
+              labels:
+                app: train-schedule
+                track: stable
+            spec:
+              containers:
+                - name: train-schedule
+                  image: \$DOCKER_IMAGE_NAME:\$BUILD_NUMBER
+                  ports:
+                    - containerPort: 8080
+                  livenessProbe:
+                    httpGet:
+                      path: /
+                      port: 8080
+                    initialDelaySeconds: 15
+                    timeoutSeconds: 1
+                    periodSeconds: 10
+                  resources:
+                    requests:
+                      cpu: 200m
+      dest: /tmp/train-schedule-deployment.yml
+
+  - name: Apply stable deployment
+    shell: kubectl apply -f /tmp/train-schedule-deployment.yml
 
   - name: Check if canary service exists and apply
     shell: |
