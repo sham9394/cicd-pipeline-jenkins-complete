@@ -100,7 +100,7 @@
             ports:
               - protocol: TCP
                 port: 8080
-                nodePort: 30001
+                nodePort: 30002
         dest: /tmp/train-schedule-service.yml
 
     - name: Apply stable service
