@@ -3,6 +3,10 @@
   # Uncomment `become: yes` if root privileges are required
   # become: yes
   tasks:
+    - name: Print workspace path for debugging
+      debug:
+        msg: "Workspace is set to {{ workspace_path }}"
+
     - name: Check and delete the existing canary deployment
       shell: |
         if kubectl get deployment train-schedule-deployment-canary &>/dev/null; then
@@ -13,7 +17,7 @@
         fi
       args:
         warn: false
-      ignore_errors: yes  # Ensures that task doesn't fail on non-zero exit code
+      ignore_errors: yes
 
     - name: Check and delete the existing main deployment
       shell: |
@@ -25,19 +29,19 @@
         fi
       args:
         warn: false
-      ignore_errors: yes  # Ensures that task doesn't fail on non-zero exit code
+      ignore_errors: yes
 
     - name: Deploy new application configurations (canary)
       shell: |
         echo "Creating new canary deployment"
-        kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-kube-canary.yml
+        kubectl apply -f {{ workspace_path }}/train-schedule-kube-canary.yml
       args:
         warn: false
 
     - name: Deploy new application configurations (main)
       shell: |
         echo "Creating new main deployment"
-        kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-kube.yml
+        kubectl apply -f {{ workspace_path }}/train-schedule-kube.yml
       args:
         warn: false
 
@@ -48,14 +52,7 @@
         else
           echo "Creating application service"
           # Uncomment the following line if you want to create the service
-          # kubectl apply -f /var/lib/jenkins/workspace/CICD-Pipeline/train-schedule-service-canary.yml
+          # kubectl apply -f {{ workspace_path }}/train-schedule-service-canary.yml
         fi
       args:
         warn: false
-
-    # Example commented-out tasks for reference
-    # - name: Deploy application
-    #   shell: kubectl create deployment sampleapp --image=lerndevops/samplejavaapp:{{ build }}
-    #
-    # - name: Expose application service
-    #   shell: kubectl expose deployment sampleapp --name sampleapp --type NodePort --port 80 --target-port 8080
