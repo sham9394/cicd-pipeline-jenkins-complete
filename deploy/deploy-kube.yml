@@ -8,6 +8,8 @@
         if kubectl get deployment train-schedule-deployment-canary &>/dev/null; then
           echo "Deleting previous canary deployment"
           kubectl delete deployment train-schedule-deployment-canary
+        else
+          echo "No previous canary deployment found"
         fi
       args:
         warn: false
@@ -17,6 +19,8 @@
         if kubectl get deployment train-schedule-deployment &>/dev/null; then
           echo "Deleting previous main deployment"
           kubectl delete deployment train-schedule-deployment
+        else
+          echo "No previous main deployment found"
         fi
       args:
         warn: false
