@@ -1,32 +1,43 @@
+---
 - hosts: "{{ env }}"
   # Uncomment `become: yes` if root privileges are required
   # become: yes
   tasks:
-    - name: Deploy application pods
+    - name: Check and delete the existing canary deployment
       shell: |
-        # Check and delete the existing canary deployment
-        if kubectl get deployment | awk '{print $1}' | grep -q "train-schedule-deployment-canary"; then
+        if kubectl get deployment train-schedule-deployment-canary &>/dev/null; then
           echo "Deleting previous canary deployment"
           kubectl delete deployment train-schedule-deployment-canary
         fi
-
-        # Check and delete the existing main deployment
-        if kubectl get deployment | awk '{print $1}' | grep -q "train-schedule-deployment"; then
-          echo "Deleting previous main deployment"
-          kubectl delete deployment train-schedule-deployment
-        fi
-
-        # Deploy new application configurations
-        echo "Creating new application deployments"
-        kubectl apply -f train-schedule-kube-canary.yml
-        kubectl apply -f train-schedule-kube.yml
       args:
         warn: false
 
-    - name: Deploy application service
+    - name: Check and delete the existing main deployment
       shell: |
-        # Check if the service already exists
-        if kubectl get svc | awk '{print $1}' | grep -q "train-schedule-service-canary"; then
+        if kubectl get deployment train-schedule-deployment &>/dev/null; then
+          echo "Deleting previous main deployment"
+          kubectl delete deployment train-schedule-deployment
+        fi
+      args:
+        warn: false
+
+    - name: Deploy new application configurations (canary)
+      shell: |
+        echo "Creating new canary deployment"
+        kubectl apply -f ${WORKSPCAE}train-schedule-kube-canary.yml
+      args:
+        warn: false
+
+    - name: Deploy new application configurations (main)
+      shell: |
+        echo "Creating new main deployment"
+        kubectl apply -f ${WORKSPCAE}train-schedule-kube.yml
+      args:
+        warn: false
+
+    - name: Check and create application service (canary)
+      shell: |
+        if kubectl get svc train-schedule-service-canary &>/dev/null; then
           echo "Application service found, no actions taken"
         else
           echo "Creating application service"
