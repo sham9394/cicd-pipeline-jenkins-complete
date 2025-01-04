@@ -1,0 +1,44 @@
+- hosts: "{{ env }}"
+  # Uncomment `become: yes` if root privileges are required
+  # become: yes
+  tasks:
+    - name: Deploy application pods
+      shell: |
+        # Check and delete the existing canary deployment
+        if kubectl get deployment | awk '{print $1}' | grep -q "train-schedule-deployment-canary"; then
+          echo "Deleting previous canary deployment"
+          kubectl delete deployment train-schedule-deployment-canary
+        fi
+
+        # Check and delete the existing main deployment
+        if kubectl get deployment | awk '{print $1}' | grep -q "train-schedule-deployment"; then
+          echo "Deleting previous main deployment"
+          kubectl delete deployment train-schedule-deployment
+        fi
+
+        # Deploy new application configurations
+        echo "Creating new application deployments"
+        kubectl apply -f train-schedule-kube-canary.yml
+        kubectl apply -f train-schedule-kube.yml
+      args:
+        warn: false
+
+    - name: Deploy application service
+      shell: |
+        # Check if the service already exists
+        if kubectl get svc | awk '{print $1}' | grep -q "train-schedule-service-canary"; then
+          echo "Application service found, no actions taken"
+        else
+          echo "Creating application service"
+          # Uncomment the following line if you want to create the service
+          # kubectl apply -f train-schedule-service-canary.yml
+        fi
+      args:
+        warn: false
+
+    # Example commented-out tasks for reference
+    # - name: Deploy application
+    #   shell: kubectl create deployment sampleapp --image=lerndevops/samplejavaapp:{{ build }}
+    #
+    # - name: Expose application service
+    #   shell: kubectl expose deployment sampleapp --name sampleapp --type NodePort --port 80 --target-port 8080
