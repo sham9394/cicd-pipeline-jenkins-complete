@@ -13,8 +13,7 @@
         fi
       args:
         warn: false
-        # This prevents failure if the command returns a non-zero exit code
-        failed_when: false
+      ignore_errors: yes  # Ensures that task doesn't fail on non-zero exit code
 
     - name: Check and delete the existing main deployment
       shell: |
@@ -26,8 +25,7 @@
         fi
       args:
         warn: false
-        # This prevents failure if the command returns a non-zero exit code
-        failed_when: false
+      ignore_errors: yes  # Ensures that task doesn't fail on non-zero exit code
 
     - name: Deploy new application configurations (canary)
       shell: |
