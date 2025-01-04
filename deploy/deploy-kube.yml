@@ -68,7 +68,7 @@
               spec:
                 containers:
                   - name: train-schedule
-                    image: sham9394/train-schedule:$BUILD_NUMBER
+                    image: sham9394/train-schedule:latest
                     ports:
                       - containerPort: 8080
                     livenessProbe:
@@ -129,7 +129,7 @@
               spec:
                 containers:
                   - name: train-schedule
-                    image: sham9394/train-schedule:$BUILD_NUMBER
+                    image: sham9394/train-schedule:latest
                     ports:
                       - containerPort: 8080
                     livenessProbe:
