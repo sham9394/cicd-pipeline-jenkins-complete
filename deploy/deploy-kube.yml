@@ -13,6 +13,8 @@
         fi
       args:
         warn: false
+        # This prevents failure if the command returns a non-zero exit code
+        failed_when: false
 
     - name: Check and delete the existing main deployment
       shell: |
@@ -24,6 +26,8 @@
         fi
       args:
         warn: false
+        # This prevents failure if the command returns a non-zero exit code
+        failed_when: false
 
     - name: Deploy new application configurations (canary)
       shell: |
