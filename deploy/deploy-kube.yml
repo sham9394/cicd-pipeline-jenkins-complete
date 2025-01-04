@@ -12,6 +12,7 @@
         fi
       args:
         warn: false
+        executable: /bin/bash
 
     - name: Check and delete the existing main deployment
       shell: |
